@@ -1,0 +1,35 @@
+{
+	"compatibility_date": "2025-10-08",
+	"main": "src/server/index.ts",
+	"name": "avatar-chat",
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": ["Chat", "RoomRegistry"]
+		}
+	],
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS",
+		"not_found_handling": "single-page-application"
+	},
+	"build": {
+		"command": "esbuild src/client/index.tsx --bundle --splitting --format=esm --platform=browser --outdir=public/dist --jsx=automatic"
+	},
+	"durable_objects": {
+		"bindings": [
+			{
+				"class_name": "Chat",
+				"name": "Chat"
+			},
+			{
+				"class_name": "RoomRegistry",
+				"name": "RoomRegistry"
+			}
+		]
+	},
+	"observability": {
+		"enabled": true
+	},
+	"upload_source_maps": true
+}

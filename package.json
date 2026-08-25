@@ -1,0 +1,33 @@
+{
+	"name": "avatar-chat",
+	"description": "Real-time multi-user chat with circular image avatars, admin moderation dashboard, and Cloudflare Durable Objects + PartyServer",
+	"cloudflare": {
+		"label": "Avatar Chat",
+		"products": ["Workers", "Durable Objects"],
+		"categories": [],
+		"publish": true
+	},
+	"dependencies": {
+		"nanoid": "5.1.6",
+		"partyserver": "0.0.75",
+		"partysocket": "1.1.6",
+		"react": "19.2.1",
+		"react-dom": "19.2.1",
+		"react-router": "7.9.6"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20260702.1",
+		"@types/react": "19.2.7",
+		"@types/react-dom": "19.2.3",
+		"esbuild": "0.27.0",
+		"typescript": "5.9.3",
+		"wrangler": "4.123.0"
+	},
+	"private": true,
+	"scripts": {
+		"cf-typegen": "wrangler types ./src/server/worker-configuration.d.ts",
+		"check": "tsc --project src/client && tsc --project src/server && wrangler deploy --dry-run",
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev"
+	}
+}

@@ -9,7 +9,9 @@ Real-time multi-user chat built on **Cloudflare Workers**, **Durable Objects**, 
 - Light / dark theme
 - Full **admin moderation dashboard** (view rooms, participants, delete messages/rooms)
 
-Live pattern is based on Cloudflare’s [durable-chat-template](https://github.com/cloudflare/templates/tree/main/durable-chat-template), extended with image avatars and an admin API.
+Based on Cloudflare’s [durable-chat-template](https://github.com/cloudflare/templates/tree/main/durable-chat-template), extended with image avatars and an admin API.
+
+**Repository:** https://github.com/RegisterMySite-com/avatar-chat
 
 ---
 
@@ -19,13 +21,13 @@ Live pattern is based on Cloudflare’s [durable-chat-template](https://github.c
 
 After the button finishes:
 
-1. In the Cloudflare dashboard go to **Workers & Pages** → your new Worker.
-2. Open **Settings** → **Variables** and add a secret:
+1. Open the Cloudflare dashboard → **Workers & Pages** → your new Worker.
+2. Go to **Settings** → **Variables** → **Add** → type **Secret**:
    - Name: `ADMIN_SECRET`
-   - Value: a strong password of your choice (used for the `/dashboard` login)
+   - Value: a strong password (used for `/dashboard` login)
 3. Redeploy if prompted so the secret is available.
 
-The admin dashboard is at `https://<your-worker>.workers.dev/dashboard`.
+Admin dashboard: `https://<your-worker>.workers.dev/dashboard`
 
 ---
 
@@ -33,10 +35,20 @@ The admin dashboard is at `https://<your-worker>.workers.dev/dashboard`.
 
 ### Prerequisites
 
-- A [Cloudflare account](https://dash.cloudflare.com/sign-up)
-- [Node.js](https://nodejs.org/) 18+ (20+ recommended)
-- [Git](https://git-scm.com/)
-- A terminal (macOS / Linux / WSL / Windows Terminal)
+| Requirement | Notes |
+|-------------|--------|
+| [Cloudflare account](https://dash.cloudflare.com/sign-up) | Free plan is enough |
+| [Node.js](https://nodejs.org/) 18+ | 20+ recommended |
+| [Git](https://git-scm.com/) | To clone the repo |
+| Terminal | macOS / Linux / WSL / Windows Terminal |
+
+You will also need to log in to Wrangler once:
+
+```bash
+npx wrangler login
+```
+
+This opens a browser window so Wrangler can obtain an API token for your account.
 
 ### 1. Clone this repository
 
@@ -51,7 +63,7 @@ cd avatar-chat
 npm install
 ```
 
-This installs React, PartyServer / PartySocket, nanoid, esbuild, TypeScript, and Wrangler.
+Installs React, PartyServer / PartySocket, nanoid, esbuild, TypeScript, and Wrangler.
 
 ### 3. Generate Worker types (optional but recommended)
 
@@ -59,7 +71,7 @@ This installs React, PartyServer / PartySocket, nanoid, esbuild, TypeScript, and
 npm run cf-typegen
 ```
 
-This writes `src/server/worker-configuration.d.ts` so TypeScript knows about your Durable Object and asset bindings.
+Writes/updates `src/server/worker-configuration.d.ts` so TypeScript knows about your Durable Object and asset bindings.
 
 ### 4. Local development
 
@@ -67,27 +79,27 @@ This writes `src/server/worker-configuration.d.ts` so TypeScript knows about you
 npm run dev
 ```
 
-Wrangler starts a local server (usually `http://127.0.0.1:8787`). Open it in a browser, pick a name + avatar, and open the same URL in another tab or device to chat.
+Wrangler starts a local server (usually `http://127.0.0.1:8787`). Open it in a browser, pick a name + circular avatar, and open the same URL in another tab or device to chat.
 
-Hot tips while developing:
+Tips while developing:
 
 - The client is rebuilt by the `build.command` in `wrangler.json` on each deploy / dev start.
 - Change avatars in `src/shared.ts` (`AVATARS` array). Use any square image URL or path under `public/`.
-- Default admin password locally is `admin` unless you set `ADMIN_SECRET`.
+- Default admin password locally is `admin` unless you set `ADMIN_SECRET` in `.dev.vars`.
 
-### 5. Set the admin secret for production
+### 5. Set the admin secret
 
-Create a file `.dev.vars` for local overrides (never commit it):
+**Local (optional):** create `.dev.vars` (never commit it):
 
 ```bash
 echo 'ADMIN_SECRET=your-strong-password-here' > .dev.vars
 ```
 
-For production, set the secret on the Worker (do this **before** or right after the first deploy):
+**Production** — set the secret on the Worker (before or right after the first deploy):
 
 ```bash
 npx wrangler secret put ADMIN_SECRET
-# paste your password when prompted
+# paste your password when prompted, then press Enter
 ```
 
 Or in the dashboard: **Workers & Pages** → your Worker → **Settings** → **Variables** → **Add** → type **Secret**.
@@ -98,19 +110,26 @@ Or in the dashboard: **Workers & Pages** → your Worker → **Settings** → **
 npx wrangler deploy
 ```
 
-Or use the npm script:
+Or:
 
 ```bash
 npm run deploy
 ```
 
-First deploy will:
+**Important:** Use a **new Worker name** if you previously deployed an older version that used a different Durable Object class (e.g. `ChatRoom`). This template exports `Chat` and `RoomRegistry` only.
 
-1. Run the esbuild step (`src/client/index.tsx` → `public/dist/`)
-2. Upload static assets from `public/`
-3. Create the Worker and the Durable Object classes `Chat` and `RoomRegistry` (see migrations in `wrangler.json`)
+```bash
+# Example: force a clean Worker name
+npx wrangler deploy --name avatar-chat
+```
 
-When it finishes you get a URL like:
+What the first deploy does:
+
+1. Runs esbuild (`src/client/index.tsx` → `public/dist/`)
+2. Uploads static assets from `public/`
+3. Creates the Worker and the Durable Object classes `Chat` + `RoomRegistry` (see `migrations` in `wrangler.json`)
+
+You will get a URL like:
 
 ```
 https://avatar-chat.<your-subdomain>.workers.dev
@@ -137,7 +156,7 @@ avatar-chat/
 ├── public/
 │   ├── index.html          # SPA shell
 │   ├── styles.css          # Light/dark UI + circular avatar styles
-│   └── dist/               # Built client (generated by esbuild)
+│   └── dist/               # Built client (generated by esbuild; gitignored)
 ├── src/
 │   ├── shared.ts           # Types, AVATARS list, room constants
 │   ├── client/
@@ -195,10 +214,15 @@ After changing client code, redeploy (`npx wrangler deploy`) so esbuild rebuilds
 
 ### “New version of script does not export class 'ChatRoom'…”
 
-An older deployment used a different Durable Object class name. This repo exports **`Chat`** and **`RoomRegistry`**.
+An older deployment used a different Durable Object class name. This repo exports **`Chat`** and **`RoomRegistry`** only.
 
-- Prefer deploying under a **new Worker name** (or delete the old Worker) so migrations start clean.
-- If you must keep the same name and the old class is no longer needed, add a migration in `wrangler.json`:
+**Preferred fix:** deploy under a **new Worker name** (or delete the old Worker) so migrations start clean:
+
+```bash
+npx wrangler deploy --name avatar-chat
+```
+
+If you must keep the same name and the old class is no longer needed, add a migration in `wrangler.json`:
 
 ```json
 "migrations": [
